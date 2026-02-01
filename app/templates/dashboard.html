@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+    <p class="text-gray-500">Income vs Expenses + category breakdown</p>
+  </div>
+
+  <div class="flex gap-2">
+    <a href="/transactions/new"
+       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
+      + Add Transaction
+    </a>
+    <a href="/transactions"
+       class="bg-white border hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg font-semibold">
+      View Transactions
+    </a>
+  </div>
+</div>
+
+<!-- Summary cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="text-sm text-gray-500">Income</div>
+    <div id="incomeTotal" class="text-2xl font-bold text-gray-900">$0.00</div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="text-sm text-gray-500">Expenses</div>
+    <div id="expenseTotal" class="text-2xl font-bold text-gray-900">$0.00</div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-5">
+    <div class="text-sm text-gray-500">Net (Income − Expenses)</div>
+    <div id="netTotal" class="text-2xl font-bold text-gray-900">$0.00</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Pie chart card -->
+  <div class="bg-white rounded-xl shadow p-6 lg:col-span-2">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-800">Category Breakdown</h3>
+
+      <div class="flex flex-wrap gap-2">
+        <!-- Income/Expense toggle -->
+        <select id="directionFilter" class="border rounded px-2 py-1 text-sm bg-white">
+          <option value="">All</option>
+          <option value="expense">Expenses</option>
+          <option value="income">Income</option>
+        </select>
+
+        <select id="typeFilter" class="border rounded px-2 py-1 text-sm bg-white">
+          <option value="">All Types</option>
+          <option value="T4">T4</option>
+          <option value="T5">T5</option>
+          <option value="Commission">Commission</option>
+          <option value="Rental">Rental</option>
+        </select>
+
+        <select id="yearFilter" class="border rounded px-2 py-1 text-sm bg-white">
+          <option value="">All Years</option>
+        </select>
+
+        <button id="refreshBtn"
+                class="bg-gray-900 hover:bg-black text-white text-sm px-3 py-1 rounded">
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="h-[420px]">
+      <canvas id="pieChart"></canvas>
+    </div>
+
+    <p id="emptyState" class="hidden mt-4 text-sm text-gray-500">
+      No data yet. Add a transaction to see your chart.
+    </p>
+  </div>
+
+  <!-- Quick actions card -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+
+    <div class="space-y-3">
+      <a href="/import/rr60"
+         class="block w-full bg-white border hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg font-semibold">
+        Import RR-60 CSV →
+      </a>
+
+      <a href="/export/csv"
+         class="block w-full bg-white border hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg font-semibold">
+        Download “Send to Accountant” CSV →
+      </a>
+
+      <a href="/transactions/new"
+         class="block w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
+        + Add Transaction
+      </a>
+
+      <p class="text-xs text-gray-500 pt-2">
+        We’ll improve the RR-60 import next to map columns and auto-set Income/Expense.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script>
+  let chartInstance = null;
+
+  function money(n) {
+    const v = Number(n || 0);
+    return v.toLocaleString("en-CA", { style: "currency", currency: "CAD" });
+  }
+
+  function buildYears() {
+    const yearSel = document.getElementById("yearFilter");
+    if (yearSel.options.length > 1) return;
+
+    const now = new Date().getFullYear();
+    const years = [now, now-1, now-2, now-3, now-4];
+    years.forEach(y => {
+      const opt = document.createElement("option");
+      opt.value = String(y);
+      opt.textContent = String(y);
+      yearSel.appendChild(opt);
+    });
+  }
+
+  function getQueryParams() {
+    const year = document.getElementById("yearFilter").value;
+    const txType = document.getElementById("typeFilter").value;
+    const direction = document.getElementById("directionFilter").value;
+
+    const params = new URLSearchParams();
+    if (year) params.set("year", year);
+    if (txType) params.set("tx_type", txType);
+    if (direction) params.set("direction", direction);
+    return params.toString();
+  }
+
+  async function loadSummary() {
+    const year = document.getElementById("yearFilter").value;
+    const url = year ? `/api/dashboard/summary?year=${encodeURIComponent(year)}` : `/api/dashboard/summary`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    document.getElementById("incomeTotal").textContent = money(data.income_total);
+    document.getElementById("expenseTotal").textContent = money(data.expense_total);
+    document.getElementById("netTotal").textContent = money(data.net);
+  }
+
+  async function loadPie() {
+    const qs = getQueryParams();
+    const url = qs ? `/api/pie?${qs}` : `/api/pie`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const labels = data.labels || [];
+    const values = data.values || [];
+
+    const total = values.reduce((a, b) => a + Number(b || 0), 0);
+
+    const emptyState = document.getElementById("emptyState");
+    if (!values.length || total === 0) emptyState.classList.remove("hidden");
+    else emptyState.classList.add("hidden");
+
+    const ctx = document.getElementById("pieChart");
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom" },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || "";
+                const val = context.parsed || 0;
+                return `${label}: ${money(val)}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async function refreshAll() {
+    await loadSummary();
+    await loadPie();
+  }
+
+  // wire up
+  buildYears();
+  document.getElementById("refreshBtn").addEventListener("click", refreshAll);
+  document.getElementById("directionFilter").addEventListener("change", refreshAll);
+  document.getElementById("typeFilter").addEventListener("change", refreshAll);
+  document.getElementById("yearFilter").addEventListener("change", refreshAll);
+
+  // initial load
+  refreshAll();
+</script>
+{% endblock %}

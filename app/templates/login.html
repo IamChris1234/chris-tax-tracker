@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chris’s Tax Tracker — Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Tailwind CDN (clean + fast for now) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
+        <h1 class="text-2xl font-bold text-center mb-2">
+            Chris’s Tax Tracker
+        </h1>
+
+        <p class="text-center text-gray-500 mb-6">
+            {{ "Create your account" if register else "Sign in to your account" }}
+        </p>
+
+        {% if error %}
+            <div class="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <form
+            method="post"
+            action="{{ '/register' if register else '/login' }}"
+            class="space-y-4"
+        >
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                </label>
+                <input
+                    type="email"
+                    name="email"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                >
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                </label>
+                <input
+                    type="password"
+                    name="password"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+                >
+            </div>
+
+            <button
+                type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
+            >
+                {{ "Create Account" if register else "Sign In" }}
+            </button>
+        </form>
+
+        {% if register %}
+            <p class="text-center text-sm text-gray-500 mt-4">
+                This creates the first (admin) account
+            </p>
+        {% e

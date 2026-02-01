@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chris’s Tax Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <span class="text-xl font-bold text-gray-800">
+                    Chris’s Tax Tracker
+                </span>
+
+                <a href="/dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                <a href="/transactions?tab=expense" class="text-gray-600 hover:text-gray-900">Expenses</a>
+                <a href="/transactions?tab=income" class="text-gray-600 hover:text-gray-900">Income</a>
+                <a href="/fuel" class="text-gray-600 hover:text-gray-900">Fuel</a>
+                <a href="/import/rr60" class="text-gray-600 hover:text-gray-900">Import (RR-60)</a>
+                <a href="/export/history" class="text-gray-600 hover:text-gray-900">Export History</a>
+            </div>
+
+            <div>
+                <a href="/logout" class="text-sm text-red-600 hover:text-red-800">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>
