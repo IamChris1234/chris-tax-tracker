@@ -1,39 +1,108 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
+from starlette.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from ..db import get_db
-from ..models import User
-from ..auth import verify_password, hash_password
+from app.db import get_db
+from app.models import User
+from app.auth import verify_password, hash_password
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
+
+# --------------------
+# LOGIN (GET)
+# --------------------
 @router.get("/login")
 def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "register": False,
+        },
+    )
 
+
+# --------------------
+# LOGIN (POST)
+# --------------------
 @router.post("/login")
-def login(request: Request, email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+def login_user(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+):
     user = db.query(User).filter(User.email == email).first()
-    if not user or not verify_password(password, user.password_hash):
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid login"})
-    request.session["user_id"] = user.id
-    return RedirectResponse(url="/", status_code=303)
 
+    if not user or not verify_password(password, user.hashed_password):
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "error": "Invalid email or password",
+                "register": False,
+            },
+            status_code=401,
+        )
+
+    request.session["user_id"] = user.id
+    return RedirectResponse("/dashboard", status_code=303)
+
+
+# --------------------
+# REGISTER (GET)
+# --------------------
+@router.get("/register")
+def register_page(request: Request):
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "register": True,
+        },
+    )
+
+
+# --------------------
+# REGISTER (POST)
+# --------------------
+@router.post("/register")
+def register_user(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "error": "Email already registered",
+                "register": True,
+            },
+            status_code=400,
+        )
+
+    user = User(
+        email=email,
+        hashed_password=hash_password(password),
+    )
+
+    db.add(user)
+    db.commit()
+
+    return RedirectResponse("/login", status_code=303)
+
+
+# --------------------
+# LOGOUT
+# --------------------
 @router.get("/logout")
 def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url="/login", status_code=303)
-
-# optional: quick bootstrap endpoint (delete later)
-@router.get("/init-admin")
-def init_admin(db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == "admin@local").first()
-    if existing:
-        return {"ok": True, "msg": "already exists"}
-    u = User(email="admin@local", password_hash=hash_password("admin123"))
-    db.add(u)
-    db.commit()
-    return {"ok": True, "email": "admin@local", "password": "admin123"}
+    return RedirectResponse("/login", status_code=303)
