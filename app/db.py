@@ -1,21 +1,22 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from .config import DATABASE_URL
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-class Base(DeclarativeBase):
-    pass
+# Use Render Postgres if DATABASE_URL exists, otherwise local sqlite
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./local.db")
 
-def _engine():
-    if DATABASE_URL.startswith("sqlite"):
-        return create_engine(
-            DATABASE_URL,
-            connect_args={"check_same_thread": False},
-            future=True,
-        )
-    return create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
 
-engine = _engine()
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,   # helps on Render when connections drop
+    connect_args=connect_args
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()
