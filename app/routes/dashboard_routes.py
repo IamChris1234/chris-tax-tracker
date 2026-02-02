@@ -2,17 +2,17 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from app.auth import require_login
+
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-
 @router.get("/dashboard")
 def dashboard(request: Request):
-    if not request.session.get("logged_in"):
+    if not require_login(request):
         return RedirectResponse("/login", status_code=303)
 
-    # use your existing dashboard.html (the nicer one you already have)
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request},
+        {"request": request, "username": request.session.get("username", "Chris")},
     )

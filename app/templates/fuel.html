@@ -1,46 +1,18 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="flex items-center justify-between mb-6">
-  <div>
-    <h2 class="text-2xl font-bold text-gray-800">Fuel</h2>
-    <p class="text-gray-500">Quick fuel log (Date, Amount, ODO)</p>
-  </div>
-
-  <a href="/fuel/new"
-     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
-    + Add Fuel
-  </a>
-</div>
-
-<div class="bg-white rounded-xl shadow overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="min-w-full text-sm">
-      <thead class="bg-gray-50 border-b">
-        <tr class="text-left text-gray-600">
-          <th class="px-4 py-3">Date</th>
-          <th class="px-4 py-3 text-right">Amount (CAD)</th>
-          <th class="px-4 py-3 text-right">ODO</th>
-          <th class="px-4 py-3">Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for f in entries %}
-          <tr class="border-b last:border-b-0 hover:bg-gray-50">
-            <td class="px-4 py-3 whitespace-nowrap">{{ f.date }}</td>
-            <td class="px-4 py-3 text-right font-semibold">{{ "%.2f"|format(f.amount) }}</td>
-            <td class="px-4 py-3 text-right font-semibold">{{ f.odometer }}</td>
-            <td class="px-4 py-3 text-gray-600">{{ f.notes }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  {% if not entries %}
-    <div class="p-6 text-gray-500">
-      No fuel entries yet. Click <span class="font-semibold">Add Fuel</span> to start.
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fuel</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body class="page">
+  <div class="card wide">
+    <div class="row">
+      <h1>Fuel</h1>
+      <a class="btn" href="/dashboard">Back</a>
     </div>
-  {% endif %}
-</div>
-{% endblock %}
+    <p>Placeholder. Next we wire your fuel form + list.</p>
+  </div>
+</body>
+</html>

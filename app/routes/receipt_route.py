@@ -7,8 +7,8 @@ from app.auth import require_login
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-@router.get("/export")
-def export_page(request: Request):
+@router.get("/receipts")
+def receipts(request: Request):
     if not require_login(request):
         return RedirectResponse("/login", status_code=303)
-    return templates.TemplateResponse("export.html", {"request": request})
+    return templates.TemplateResponse("receipts.html", {"request": request})

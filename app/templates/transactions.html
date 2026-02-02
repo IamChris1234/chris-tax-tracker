@@ -1,119 +1,18 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="flex items-center justify-between mb-6">
-  <div>
-    <h2 class="text-2xl font-bold text-gray-800">Transactions</h2>
-    <p class="text-gray-500">Two views: Income and Expenses</p>
-  </div>
-
-  <div class="flex gap-2">
-    <a href="/transactions/new"
-       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
-      + Add Transaction
-    </a>
-    <a href="/export/csv"
-       class="bg-white border hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg font-semibold">
-      Export CSV
-    </a>
-  </div>
-</div>
-
-<!-- Tabs -->
-<div class="bg-white rounded-xl shadow">
-  <div class="border-b px-4 pt-4">
-    <div class="flex gap-2">
-      <a href="/transactions?tab=expense"
-         class="px-4 py-2 rounded-t-lg font-semibold
-                {% if active_tab == 'expense' %}bg-gray-900 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-        Expenses
-      </a>
-      <a href="/transactions?tab=income"
-         class="px-4 py-2 rounded-t-lg font-semibold
-                {% if active_tab == 'income' %}bg-gray-900 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-        Income
-      </a>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Transactions</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body class="page">
+  <div class="card wide">
+    <div class="row">
+      <h1>Transactions</h1>
+      <a class="btn" href="/dashboard">Back</a>
     </div>
+    <p>This is a placeholder page. Next we wire it to your real transaction DB.</p>
   </div>
-
-  <div class="p-4">
-    <div class="flex items-center justify-between mb-3">
-      <div class="text-sm text-gray-500">
-        Showing: <span class="font-semibold text-gray-900">{{ "Expenses" if active_tab == "expense" else "Income" }}</span>
-      </div>
-      <div class="text-sm">
-        <span class="text-gray-500">Total:</span>
-        <span class="font-bold text-gray-900">{{ "%.2f"|format(total_amount) }}</span>
-      </div>
-    </div>
-
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-gray-50 border-y">
-          <tr class="text-left text-gray-600">
-            <th class="px-4 py-3">Date</th>
-            <th class="px-4 py-3">Vendor</th>
-            <th class="px-4 py-3">Description</th>
-            <th class="px-4 py-3">Type</th>
-            <th class="px-4 py-3">Category</th>
-            <th class="px-4 py-3 text-right">Amount</th>
-            <th class="px-4 py-3 text-right">Tax</th>
-            <th class="px-4 py-3">Receipt</th>
-            <th class="px-4 py-3">Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in rows %}
-            {% set t = row.txn %}
-            <tr class="border-b last:border-b-0 hover:bg-gray-50">
-              <td class="px-4 py-3 whitespace-nowrap">{{ t.date }}</td>
-              <td class="px-4 py-3 font-medium text-gray-900">{{ t.vendor }}</td>
-              <td class="px-4 py-3 text-gray-700">{{ t.description }}</td>
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 border">
-                  {{ t.type }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-gray-700">
-                {% if row.category_name %}
-                  {{ row.category_name }}
-                {% else %}
-                  <span class="text-gray-400">—</span>
-                {% endif %}
-              </td>
-              <td class="px-4 py-3 text-right font-semibold">
-                {{ "%.2f"|format(t.amount) }}
-              </td>
-              <td class="px-4 py-3 text-right text-gray-700">
-                {{ "%.2f"|format(t.tax) }}
-              </td>
-
-              <td class="px-4 py-3">
-                {% if row.att_count and row.first_att_id %}
-                  <a class="text-blue-700 hover:text-blue-900 font-semibold"
-                     href="/attachments/{{ row.first_att_id }}/download">
-                    Download
-                  </a>
-                  {% if row.att_count > 1 %}
-                    <span class="text-xs text-gray-500">(+{{ row.att_count - 1 }})</span>
-                  {% endif %}
-                {% else %}
-                  <span class="text-gray-400">—</span>
-                {% endif %}
-              </td>
-
-              <td class="px-4 py-3 text-gray-600">{{ t.notes }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-    {% if not rows %}
-      <div class="pt-6 text-gray-500">
-        No {{ "expenses" if active_tab == "expense" else "income" }} yet.
-      </div>
-    {% endif %}
-  </div>
-</div>
-{% endblock %}
+</body>
+</html>
