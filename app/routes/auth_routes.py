@@ -1,108 +1,86 @@
-from fastapi import APIRouter, Request, Form, Depends
+from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse
-from starlette.templating import Jinja2Templates
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-
 from app.db import get_db
 from app.models import User
-from app.auth import verify_password, hash_password
+from app.auth import hash_password, verify_password, login_user, logout_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-
-# --------------------
-# LOGIN (GET)
-# --------------------
 @router.get("/login")
 def login_page(request: Request):
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-            "register": False,
-        },
-    )
+    return templates.TemplateResponse("login.html", {"request": request, "error": None})
 
-
-# --------------------
-# LOGIN (POST)
-# --------------------
 @router.post("/login")
-def login_user(
+def login_submit(
     request: Request,
+    db: Session = Depends(get_db),
     email: str = Form(...),
     password: str = Form(...),
-    db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.email == email).first()
+    email_norm = email.strip().lower()
+    user = db.query(User).filter(User.email == email_norm).first()
 
-    if not user or not verify_password(password, user.hashed_password):
+    # IMPORTANT: avoid leaking which part is wrong in production; but ok for now.
+    if not user or not verify_password(password, user.password_hash):
         return templates.TemplateResponse(
             "login.html",
-            {
-                "request": request,
-                "error": "Invalid email or password",
-                "register": False,
-            },
+            {"request": request, "error": "Incorrect email or password."},
             status_code=401,
         )
 
-    request.session["user_id"] = user.id
-    return RedirectResponse("/dashboard", status_code=303)
+    login_user(request, user)
+    return RedirectResponse(url="/", status_code=303)
 
-
-# --------------------
-# REGISTER (GET)
-# --------------------
 @router.get("/register")
 def register_page(request: Request):
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-            "register": True,
-        },
-    )
+    return templates.TemplateResponse("register.html", {"request": request, "error": None})
 
-
-# --------------------
-# REGISTER (POST)
-# --------------------
 @router.post("/register")
-def register_user(
+def register_submit(
     request: Request,
+    db: Session = Depends(get_db),
     email: str = Form(...),
     password: str = Form(...),
-    db: Session = Depends(get_db),
+    confirm_password: str = Form(...),
 ):
-    existing_user = db.query(User).filter(User.email == email).first()
-    if existing_user:
+    email_norm = email.strip().lower()
+
+    if password != confirm_password:
         return templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "error": "Email already registered",
-                "register": True,
-            },
+            "register.html",
+            {"request": request, "error": "Passwords do not match."},
             status_code=400,
         )
 
+    existing = db.query(User).filter(User.email == email_norm).first()
+    if existing:
+        return templates.TemplateResponse(
+            "register.html",
+            {"request": request, "error": "That email is already registered."},
+            status_code=400,
+        )
+
+    # First user becomes admin (optional but handy)
+    is_first_user = db.query(User).count() == 0
+
     user = User(
-        email=email,
-        hashed_password=hash_password(password),
+        email=email_norm,
+        password_hash=hash_password(password),
+        is_admin=is_first_user,
     )
 
     db.add(user)
     db.commit()
+    db.refresh(user)
 
-    return RedirectResponse("/login", status_code=303)
+    # Auto-login after register
+    login_user(request, user)
+    return RedirectResponse(url="/", status_code=303)
 
-
-# --------------------
-# LOGOUT
-# --------------------
 @router.get("/logout")
 def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse("/login", status_code=303)
+    logout_user(request)
+    return RedirectResponse(url="/login", status_code=303)

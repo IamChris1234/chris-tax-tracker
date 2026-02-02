@@ -1,28 +1,38 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi.staticfiles import StaticFiles
 
-from .config import SECRET_KEY, APP_NAME
-from .db import engine, Base
+from app.db import engine
+from app.models import Base
+from app.routes.auth_routes import router as auth_router
+from app.routes.dashboard_routes import router as dashboard_router  # your existing file
 
-from .routes.auth_routes import router as auth_router
-from .routes.txn_routes import router as txn_router
-from .routes.fuel_routes import router as fuel_router
-from .routes.attachments_routes import router as attachments_router
-from .routes.export_routes import router as export_router
-from .routes.dashboard_routes import router as dashboard_router
+def _require_env(name: str) -> str:
+    val = os.getenv(name)
+    if not val:
+        raise RuntimeError(f"Missing required env var: {name}")
+    return val
 
-app = FastAPI(title=APP_NAME)
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
-
-# create tables on boot (simple mode)
+# Create tables on startup (simple approach)
 Base.metadata.create_all(bind=engine)
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app = FastAPI()
+
+SECRET_KEY = _require_env("SECRET_KEY")
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    https_only=True,          # Render is HTTPS
+    same_site="lax",
+)
 
 app.include_router(auth_router)
 app.include_router(dashboard_router)
-app.include_router(txn_router)
-app.include_router(fuel_router)
-app.include_router(attachments_router)
-app.include_router(export_router)
+
+@app.get("/")
+def root(request: Request):
+    # your dashboard router already handles "/" in your screenshot.
+    # This is just a safety fallback if routing changes.
+    return RedirectResponse(url="/", status_code=307)

@@ -1,19 +1,26 @@
 from passlib.context import CryptContext
-from fastapi import Depends, Request
+from fastapi import Request
 from sqlalchemy.orm import Session
-from .db import get_db
-from .models import User
+from app.models import User
 
-pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def hash_password(pw: str) -> str:
-    return pwd.hash(pw)
+SESSION_USER_KEY = "user_id"
 
-def verify_password(pw: str, hashed: str) -> bool:
-    return pwd.verify(pw, hashed)
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    user_id = request.session.get("user_id")
+def verify_password(password: str, password_hash: str) -> bool:
+    return pwd_context.verify(password, password_hash)
+
+def login_user(request: Request, user: User) -> None:
+    request.session[SESSION_USER_KEY] = user.id
+
+def logout_user(request: Request) -> None:
+    request.session.pop(SESSION_USER_KEY, None)
+
+def get_current_user(request: Request, db: Session) -> User | None:
+    user_id = request.session.get(SESSION_USER_KEY)
     if not user_id:
-        return None  # routes can redirect
-    return db.get(User, user_id)
+        return None
+    return db.query(User).filter(User.id == user_id).first()

@@ -1,22 +1,26 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Use Render Postgres if DATABASE_URL exists, otherwise local sqlite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./local.db")
+def _normalize_db_url(url: str | None) -> str:
+    if not url:
+        raise RuntimeError("DATABASE_URL is not set in environment variables.")
 
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
+    # Render sometimes provides postgres:// which SQLAlchemy prefers as postgresql://
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+
+    return url
+
+DATABASE_URL = _normalize_db_url(os.getenv("DATABASE_URL"))
 
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,   # helps on Render when connections drop
-    connect_args=connect_args
+    pool_pre_ping=True,
+    future=True,
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
 
 def get_db():
     db = SessionLocal()

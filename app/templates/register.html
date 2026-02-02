@@ -1,13 +1,13 @@
 <!doctype html>
 <html>
   <body>
-    <h2>Login</h2>
+    <h2>Register</h2>
 
     {% if error %}
       <p style="color:red;">{{ error }}</p>
     {% endif %}
 
-    <form method="post" action="/login">
+    <form method="post" action="/register">
       <div>
         <label>Email</label>
         <input name="email" type="email" required />
@@ -16,9 +16,14 @@
         <label>Password</label>
         <input name="password" type="password" required />
       </div>
-      <button type="submit">Sign In</button>
+      <div>
+        <label>Confirm Password</label>
+        <input name="confirm_password" type="password" required />
+      </div>
+
+      <button type="submit">Create Account</button>
     </form>
 
-    <p><a href="/register">Create an account</a></p>
+    <p><a href="/login">Back to login</a></p>
   </body>
 </html>
