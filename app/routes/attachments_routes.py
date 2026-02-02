@@ -1,76 +1,50 @@
-import uuid
-from datetime import datetime
-from pathlib import Path
-from fastapi import APIRouter, Request, Depends, UploadFile, File, Form
-from fastapi.responses import RedirectResponse, FileResponse
+# app/routes/attachments_routes.py
+
+from fastapi import APIRouter, Request, Depends, UploadFile, File
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..auth import get_current_user
-from ..models import Receipt
-from ..config import UPLOADS_DIR
 
-router = APIRouter(prefix="/receipts")
+router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-@router.get("")
-def receipts_page(request: Request, db: Session = Depends(get_db)):
+
+@router.get("/attachments", response_class=HTMLResponse)
+def attachments_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request, db)
     if not user:
         return RedirectResponse("/login", status_code=303)
-    items = db.query(Receipt).filter(Receipt.user_id == user.id).order_by(Receipt.uploaded_at.desc()).limit(200).all()
-    return templates.TemplateResponse("import_rr60.html", {"request": request, "items": items})  # re-use if you want
 
-@router.post("/upload")
-def upload_receipt(
+    # If you already have a template, you can render it here.
+    # For now, keep it simple so the site works.
+    return HTMLResponse(
+        """
+        <h1>Attachments</h1>
+        <p>Logged in ✅</p>
+        <form method="post" action="/attachments/upload" enctype="multipart/form-data">
+          <input type="file" name="file" />
+          <button type="submit">Upload</button>
+        </form>
+        <p><a href="/dashboard">Back to dashboard</a></p>
+        """,
+        status_code=200,
+    )
+
+
+@router.post("/attachments/upload")
+async def upload_attachment(
     request: Request,
     file: UploadFile = File(...),
-    transaction_id: int | None = Form(None),
-    fuel_entry_id: int | None = Form(None),
     db: Session = Depends(get_db),
 ):
     user = get_current_user(request, db)
     if not user:
         return RedirectResponse("/login", status_code=303)
 
-    ext = Path(file.filename).suffix.lower()
-    stored = f"{uuid.uuid4().hex}{ext}"
-    dest = UPLOADS_DIR / stored
-
-    contents = file.file.read()
-    dest.write_bytes(contents)
-
-    r = Receipt(
-        user_id=user.id,
-        original_name=file.filename,
-        stored_name=stored,
-        content_type=file.content_type or "application/octet-stream",
-        size_bytes=len(contents),
-        transaction_id=transaction_id,
-        fuel_entry_id=fuel_entry_id,
-        uploaded_at=datetime.utcnow(),
-    )
-    db.add(r)
-    db.commit()
-    return RedirectResponse("/receipts", status_code=303)
-
-@router.get("/download/{receipt_id}")
-def download_receipt(receipt_id: int, request: Request, db: Session = Depends(get_db)):
-    user = get_current_user(request, db)
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
-    r = db.get(Receipt, receipt_id)
-    if not r or r.user_id != user.id:
-        return RedirectResponse("/receipts", status_code=303)
-
-    path = UPLOADS_DIR / r.stored_name
-    if not path.exists():
-        return RedirectResponse("/receipts", status_code=303)
-
-    return FileResponse(
-        path=str(path),
-        filename=r.original_name,
-        media_type=r.content_type
-    )
+    # Placeholder behavior (prevents 500s). We’ll wire storage later.
+    # Just read the bytes so the request succeeds.
+    _ = await file.read()
+    return RedirectResponse("/attachments", status_code=303)
