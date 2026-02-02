@@ -1,27 +1,52 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login</title>
+  <link rel="stylesheet" href="/static/app.css" />
 </head>
-<body>
-  <h2>Login</h2>
 
-  {% if error %}
-    <p style="color:red">{{ error }}</p>
-  {% endif %}
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
+    <h1 class="text-2xl font-semibold mb-6 text-center">Sign In</h1>
 
-  <form method="post" action="/login">
-    <div>
-      <label>Username</label>
-      <input name="username" required />
-    </div>
+    {% if error %}
+      <div class="mb-4 p-3 rounded bg-red-100 text-red-700 text-sm">
+        {{ error }}
+      </div>
+    {% endif %}
 
-    <div>
-      <label>Password</label>
-      <input type="password" name="password" required />
-    </div>
+    <form method="post" action="/login">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+        <input
+          name="username"
+          required
+          class="w-full border rounded px-3 py-2"
+          placeholder="Chris"
+        />
+      </div>
 
-    <button type="submit">Login</button>
-  </form>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <input
+          type="password"
+          name="password"
+          required
+          class="w-full border rounded px-3 py-2"
+          placeholder="••••••••"
+        />
+      </div>
+<a href="/logout" class="text-blue-600 hover:underline">Logout</a>
+
+      <button
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded"
+      >
+        Log In
+      </button>
+    </form>
+  </div>
 </body>
 </html>

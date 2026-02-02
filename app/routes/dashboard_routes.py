@@ -11,6 +11,7 @@ def dashboard(request: Request):
     if not request.session.get("logged_in"):
         return RedirectResponse("/login", status_code=303)
 
+    # use your existing dashboard.html (the nicer one you already have)
     return templates.TemplateResponse(
         "dashboard.html",
         {"request": request},
