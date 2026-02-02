@@ -1,62 +1,45 @@
 {% extends "base.html" %}
+{% block title %}New Transaction{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl">
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h2 class="text-2xl font-bold text-gray-800">Add Transaction</h2>
-      <p class="text-gray-500">Enter an expense or income entry and optionally attach a receipt.</p>
-    </div>
-
-    <a href="/transactions"
-       class="bg-white border hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-lg font-semibold">
-      ← Back
-    </a>
+<div class="card wide">
+  <div class="row">
+    <h1>New Transaction</h1>
+    <a class="btn" href="/transactions">Back</a>
   </div>
 
-  <div class="bg-white rounded-xl shadow p-6">
-    <form method="post" action="/transactions/new" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {% if error %}
+    <div class="alert">{{ error }}</div>
+  {% endif %}
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-        <input type="date" name="date" required
-               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-      </div>
+  <form method="post" action="/transactions/new" class="form-grid">
+    <div>
+      <label>Date</label>
+      <input type="date" name="date" required />
+    </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-        <select name="tx_type" required
-                class="w-full border rounded px-3 py-2 bg-white focus:outline-none focus:ring focus:border-blue-500">
-          {% for t in types %}
-            <option value="{{ t }}">{{ t }}</option>
-          {% endfor %}
-        </select>
-      </div>
+    <div>
+      <label>Amount</label>
+      <input type="number" step="0.01" name="amount" required value="{{ defaults.amount or '' }}" />
+    </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
-        <input type="text" name="vendor" required placeholder="EPCOR, Home Depot, Leon’s..."
-               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-      </div>
+    <div class="full">
+      <label>Description</label>
+      <input name="description" required value="{{ defaults.description or '' }}" />
+    </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <input type="text" name="description" placeholder="Utilities bill, vanity, flooring..."
-               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-      </div>
+    <div class="full">
+      <label>Category</label>
+      <select name="category" required>
+        {% for c in categories %}
+          <option value="{{ c }}" {% if defaults.category == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Amount (CAD)</label>
-        <input type="number" step="0.01" name="amount" required
-               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Tax (optional)</label>
-        <input type="number" step="0.01" name="tax" value="0"
-               class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500">
-      </div>
-
-      <div class="md:col-span-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Category (optional)</label>
-        <select name="c
+    <div class="full">
+      <button class="btn primary" type="submit">Save</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

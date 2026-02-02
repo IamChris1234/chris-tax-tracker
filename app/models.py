@@ -1,35 +1,33 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Numeric
-from datetime import datetime
+# app/models.py
+from sqlalchemy import Column, Integer, String, Date, DateTime, Float, Text
+from sqlalchemy.sql import func
+from .db import Base
 
-class Base(DeclarativeBase):
-    pass
-
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    is_admin: Mapped[bool] = mapped_column(default=False)
-
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-# Minimal placeholders so imports don't explode if other routes expect them.
 class Transaction(Base):
     __tablename__ = "transactions"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False)
+    description = Column(String(255), nullable=False)
+    category = Column(String(100), nullable=False)
+    amount = Column(Float, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 class FuelEntry(Base):
     __tablename__ = "fuel_entries"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False)
+    liters = Column(Float, nullable=False)
+    cost = Column(Float, nullable=False)
+    odometer = Column(Integer, nullable=False)
+    note = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 class Receipt(Base):
     __tablename__ = "receipts"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=True)
+    title = Column(String(255), nullable=False)
+    filename = Column(String(255), nullable=False)
+    content_type = Column(String(100), nullable=True)
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

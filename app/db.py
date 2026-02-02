@@ -1,26 +1,16 @@
-import os
+# app/db.py
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from .config import DATABASE_URL
 
-def _normalize_db_url(url: str | None) -> str:
-    if not url:
-        raise RuntimeError("DATABASE_URL is not set in environment variables.")
+# Use Postgres on Render if DATABASE_URL is set, otherwise local SQLite
+if DATABASE_URL:
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+else:
+    engine = create_engine("sqlite:///./local.db", connect_args={"check_same_thread": False})
 
-    # Render sometimes provides postgres:// which SQLAlchemy prefers as postgresql://
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
-
-    return url
-
-DATABASE_URL = _normalize_db_url(os.getenv("DATABASE_URL"))
-
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    future=True,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 def get_db():
     db = SessionLocal()

@@ -6,16 +6,21 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
-# Virtual environments
+# Virtual env
 .venv/
 venv/
+
+# Env secrets
 .env
 
 # macOS / editor
 .DS_Store
 .vscode/
 
-# Local databases / files
+# Local DB / logs
 *.sqlite
 *.db
 *.log
+
+# Uploads
+storage/uploads/

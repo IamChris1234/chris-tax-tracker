@@ -1,18 +1,35 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Transactions</title>
-  <link rel="stylesheet" href="/static/app.css" />
-</head>
-<body class="page">
-  <div class="card wide">
-    <div class="row">
-      <h1>Transactions</h1>
-      <a class="btn" href="/dashboard">Back</a>
-    </div>
-    <p>This is a placeholder page. Next we wire it to your real transaction DB.</p>
+{% extends "base.html" %}
+{% block title %}Transactions{% endblock %}
+
+{% block content %}
+<div class="card wide">
+  <div class="row">
+    <h1>Transactions</h1>
+    <a class="btn primary" href="/transactions/new">+ Add</a>
   </div>
-</body>
-</html>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Category</th>
+        <th class="right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.date }}</td>
+        <td>{{ r.description }}</td>
+        <td>{{ r.category }}</td>
+        <td class="right">${{ "%.2f"|format(r.amount) }}</td>
+      </tr>
+      {% endfor %}
+      {% if rows|length == 0 %}
+      <tr><td colspan="4" class="muted">No transactions yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

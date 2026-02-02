@@ -1,11 +1,30 @@
-import os
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body class="page center">
+  <div class="card">
+    <h1>Sign in</h1>
 
-def getenv(name: str, default: str | None = None) -> str | None:
-    v = os.getenv(name)
-    return v if v not in (None, "") else default
+    {% if error %}
+      <div class="alert">{{ error }}</div>
+    {% endif %}
 
-APP_ENV = getenv("APP_ENV", "development")
-SESSION_SECRET = getenv("APP_SESSION_SECRET", "dev-secret-change-me")  # must be set in Render
+    <form method="post" action="/login">
+      <label>Username</label>
+      <input name="username" required />
 
-ADMIN_USERNAME = getenv("ADMIN_USERNAME", "Chris")
-ADMIN_PASSWORD = getenv("ADMIN_PASSWORD")  # must be set in Render
+      <label>Password</label>
+      <input name="password" type="password" required />
+
+      <button class="btn primary" type="submit">Login</button>
+    </form>
+
+    <p class="muted">Single-user login (Render ENV).</p>
+  </div>
+</body>
+</html>

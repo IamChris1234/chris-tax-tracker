@@ -1,14 +1,9 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
+"""
+receipt_routes.py
 
-from app.auth import require_login
+This file exists because app/main.py imports it.
+Right now, "receipts" are handled inside attachments_routes.py,
+so we re-export that router here to keep imports stable.
+"""
 
-router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
-
-@router.get("/receipts")
-def receipts(request: Request):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-    return templates.TemplateResponse("receipts.html", {"request": request})
+from app.routes.attachments_routes import router  # re-export

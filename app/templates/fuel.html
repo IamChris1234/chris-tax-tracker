@@ -1,18 +1,37 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fuel</title>
-  <link rel="stylesheet" href="/static/app.css" />
-</head>
-<body class="page">
-  <div class="card wide">
-    <div class="row">
-      <h1>Fuel</h1>
-      <a class="btn" href="/dashboard">Back</a>
-    </div>
-    <p>Placeholder. Next we wire your fuel form + list.</p>
+{% extends "base.html" %}
+{% block title %}Fuel Log{% endblock %}
+
+{% block content %}
+<div class="card wide">
+  <div class="row">
+    <h1>Fuel Log</h1>
+    <a class="btn primary" href="/fuel/new">+ Add</a>
   </div>
-</body>
-</html>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th class="right">Liters</th>
+        <th class="right">Cost</th>
+        <th class="right">Odometer</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.date }}</td>
+        <td class="right">{{ "%.2f"|format(r.liters) }}</td>
+        <td class="right">${{ "%.2f"|format(r.cost) }}</td>
+        <td class="right">{{ r.odometer }}</td>
+        <td>{{ r.note or "" }}</td>
+      </tr>
+      {% endfor %}
+      {% if rows|length == 0 %}
+      <tr><td colspan="5" class="muted">No fuel entries yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

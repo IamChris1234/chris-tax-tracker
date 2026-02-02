@@ -1,17 +1,13 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
+{% extends "base.html" %}
+{% block title %}Export{% endblock %}
 
-from app.auth import require_login
+{% block content %}
+<div class="card wide">
+  <div class="row">
+    <h1>Export</h1>
+    <a class="btn" href="/dashboard">Back</a>
+  </div>
 
-router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
-
-
-@router.get("/export")
-def export_page(request: Request):
-    if not require_login(request):
-        return RedirectResponse("/login", status_code=303)
-
-    # IMPORTANT: match your real template filename
-    return templates.TemplateResponse("export_history.html", {"request": request})
+  <p class="muted">Placeholder for CSV exports (transactions/fuel/receipts). Next step.</p>
+</div>
+{% endblock %}

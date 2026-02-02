@@ -1,18 +1,60 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Receipts</title>
-  <link rel="stylesheet" href="/static/app.css" />
-</head>
-<body class="page">
-  <div class="card wide">
-    <div class="row">
-      <h1>Receipts</h1>
-      <a class="btn" href="/dashboard">Back</a>
-    </div>
-    <p>Placeholder. Next we wire uploads + storage.</p>
+{% extends "base.html" %}
+{% block title %}Receipts{% endblock %}
+
+{% block content %}
+<div class="card wide">
+  <div class="row">
+    <h1>Receipts</h1>
   </div>
-</body>
-</html>
+
+  <form method="post" action="/receipts/upload" enctype="multipart/form-data" class="form-grid">
+    <div class="full">
+      <label>Title</label>
+      <input name="title" required placeholder="Home Depot – Toilet parts" />
+    </div>
+
+    <div>
+      <label>Date (optional)</label>
+      <input type="date" name="date" />
+    </div>
+
+    <div class="full">
+      <label>Note (optional)</label>
+      <input name="note" placeholder="Anything you want to remember…" />
+    </div>
+
+    <div class="full">
+      <label>File (PDF / image)</label>
+      <input type="file" name="file" required />
+    </div>
+
+    <div class="full">
+      <button class="btn primary" type="submit">Upload</button>
+    </div>
+  </form>
+
+  <hr/>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Title</th>
+        <th>File</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.date or "" }}</td>
+        <td>{{ r.title }}</td>
+        <td><a href="/receipts/file/{{ r.id }}">Download</a></td>
+      </tr>
+      {% endfor %}
+      {% if rows|length == 0 %}
+      <tr><td colspan="3" class="muted">No receipts yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

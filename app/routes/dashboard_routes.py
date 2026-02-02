@@ -1,18 +1,33 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+# app/routes/dashboard_routes.py
+from fastapi import APIRouter, Request, Depends
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
 
-from app.auth import require_login
+from ..db import get_db
+from ..auth import get_current_user
+from ..models import Transaction, FuelEntry, Receipt
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-@router.get("/dashboard")
-def dashboard(request: Request):
-    if not require_login(request):
+@router.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(request, db)
+    if not user:
         return RedirectResponse("/login", status_code=303)
+
+    tx_count = db.query(Transaction).count()
+    fuel_count = db.query(FuelEntry).count()
+    receipt_count = db.query(Receipt).count()
 
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request, "username": request.session.get("username", "Chris")},
+        {
+            "request": request,
+            "user": user,
+            "tx_count": tx_count,
+            "fuel_count": fuel_count,
+            "receipt_count": receipt_count,
+        },
     )
